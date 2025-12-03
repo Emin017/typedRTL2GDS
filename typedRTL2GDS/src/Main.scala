@@ -25,8 +25,11 @@ object EDATypes {
   opaque type VerilogPath = String
   object VerilogPath {
     def from(path: String): Either[String, VerilogPath] =
-      if (path.endsWith(".v") || path.endsWith(".sv")) Right(path)
-      else Left(s"Invalid Verilog file: '$path' (must end with .v or .sv)")
+      Either.cond(
+        path.endsWith(".v") || path.endsWith(".sv"),
+        path,
+        s"Invalid Verilog file: '$path' (must end with .v or .sv)"
+      )
 
     extension (p: VerilogPath) def value: String = p
   }
@@ -34,8 +37,11 @@ object EDATypes {
   opaque type DefPath = String
   object DefPath {
     def from(path: String): Either[String, DefPath] =
-      if (path.endsWith(".def")) Right(path)
-      else Left(s"Invalid DEF file: '$path' (must end with .def)")
+      Either.cond(
+        path.endsWith(".def"),
+        path,
+        s"Invalid DEF file: '$path' (must end with .def)"
+      )
 
     extension (p: DefPath) def value: String = p
   }
@@ -43,8 +49,11 @@ object EDATypes {
   opaque type GdsPath = String
   object GdsPath {
     def from(path: String): Either[String, GdsPath] =
-      if (path.endsWith(".gds")) Right(path)
-      else Left(s"Invalid GDS file: '$path' (must end with .gds)")
+      Either.cond(
+        path.endsWith(".gds"),
+        path,
+        s"Invalid GDS file: '$path' (must end with .gds)"
+      )
 
     extension (p: GdsPath) def value: String = p
   }
@@ -82,11 +91,13 @@ case class SynContext(initial: InitialContext, defFile: DefPath)
   def config: InputConfig = initial.config
 
   def validate: Either[String, Unit] =
-    Either.cond(
-      config.designInfo.coreUtilization > 0 && config.designInfo.coreUtilization < 1.0,
-      (),
-      "Core utilization must be between 0.0 and 1.0"
-    ).flatMap(_ => initial.validate)
+    Either
+      .cond(
+        config.designInfo.coreUtilization > 0 && config.designInfo.coreUtilization < 1.0,
+        (),
+        "Core utilization must be between 0.0 and 1.0"
+      )
+      .flatMap(_ => initial.validate)
 }
 
 case class PnrContext(syn: SynContext, gdsFile: GdsPath) extends FlowContext {
