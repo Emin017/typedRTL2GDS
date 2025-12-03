@@ -1,0 +1,18 @@
+package rtl2gds
+
+import rtl2gds.types.EDATypes.VerilogPath
+
+object Yosys {
+  def runtimeEnv(clkFreqMHz: Int, foundryPath: String) = Seq(
+    "CLK_FREQ" -> clkFreqMHz.toString,
+    "FOUNDARY_PATH" -> foundryPath
+  )
+  def synthCommand(
+      config: InputConfig,
+      scriptDir: String,
+      pdkScriptDir: String,
+      rtlFile: VerilogPath,
+      outputNetList: String
+  ): String =
+    s"echo tcl ${scriptDir}/synth.tcl ${config.designName} ${pdkScriptDir} ${config.rtlFile} ${outputNetList} | yosys -g -l yosys_synth.log -s -"
+}
