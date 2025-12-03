@@ -80,6 +80,8 @@ object Flow extends GlobalConfigs {
       )
 
       outputNetList = s"output/${ctx.config.designName}.v"
+      // Ensure output directory exists
+      _ <- IO.blocking(new java.io.File("output").mkdirs())
 
       cmd = Yosys.synthCommand(
         config = ctx.config,
