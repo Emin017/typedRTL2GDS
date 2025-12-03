@@ -29,7 +29,10 @@ object InitialContext {
   def fromConfig(config: InputConfig): IO[InitialContext] = {
     IO.fromEither(
       VerilogPath
-        .from(config.rtlFile)
+        .from(
+          System.getProperty("user.dir") + "/" + config.rtlFile
+            .stripPrefix("./")
+        )
         .leftMap(new IllegalArgumentException(_))
     ).map(InitialContext(config, _))
   }
