@@ -196,9 +196,12 @@ object Main extends IOApp {
     Resource
       .make(acquire)(release)
       .use { source =>
-        IO.fromEither(
-          parser.parse(source.mkString).flatMap(_.as[InputConfig])
-        )
+        for {
+          content <- IO.blocking(source.mkString)
+          config <- IO.fromEither(
+            parser.parse(content).flatMap(_.as[InputConfig])
+          )
+        } yield config
       }
       .handleErrorWith { error =>
         IO.raiseError(
