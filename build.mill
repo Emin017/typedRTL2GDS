@@ -11,7 +11,7 @@ object typedRTL2GDS extends ScalaModule with ScalafmtModule with ScalafixModule 
   def scalaVersion = "3.6.4"
   def typeSafeConfigVersion = "1.4.2"
 
-  def scalacOptions = Seq("-feature", "-deprecation", "-explain", "-Wunused:all")
+  def scalacOptions = Seq("-feature", "-deprecation", "-explain", "-Wunused:all", "-Wnonunit-statement")
 
   def ivyDeps = Agg(
     ivy"com.lihaoyi::scalatags:0.13.1",
