@@ -60,9 +60,11 @@ trait FlowContext {
 case class InitialContext(config: InputConfig, inputRtl: VerilogPath)
     extends FlowContext {
   def validate: Either[String, Unit] =
-    if (config.designInfo.clkFreqMHz <= 0)
-      Left("Clock frequency must be positive")
-    else Right(())
+    Either.cond(
+      config.designInfo.clkFreqMHz > 0,
+      (),
+      "Clock frequency must be positive"
+    )
 }
 
 object InitialContext {
@@ -80,11 +82,11 @@ case class SynContext(initial: InitialContext, defFile: DefPath)
   def config: InputConfig = initial.config
 
   def validate: Either[String, Unit] =
-    if (
-      config.designInfo.coreUtilization <= 0 || config.designInfo.coreUtilization >= 1.0
-    )
-      Left("Core utilization must be between 0.0 and 1.0")
-    else initial.validate
+    Either.cond(
+      config.designInfo.coreUtilization > 0 && config.designInfo.coreUtilization < 1.0,
+      (),
+      "Core utilization must be between 0.0 and 1.0"
+    ).flatMap(_ => initial.validate)
 }
 
 case class PnrContext(syn: SynContext, gdsFile: GdsPath) extends FlowContext {
