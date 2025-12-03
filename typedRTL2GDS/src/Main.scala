@@ -3,7 +3,6 @@ package typedRTL2GDS
 import cats.effect._
 import cats.syntax.all._
 import mainargs._
-// import java.io.{File, FileReader}
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.yaml.parser
