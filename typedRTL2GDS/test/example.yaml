@@ -1,0 +1,13 @@
+designName: gcd
+rtlFile: ./gcd.v
+enableFileList: false
+
+foundry:
+  name: ics55
+  pdkDir: /path/to/foundry
+
+designInfo:
+  clkPortName: clk
+  clkFreqMHz: 100
+  coreUtilization: 0.7
+
