@@ -10,7 +10,7 @@ import rtl2gds.types.EDATypes.VerilogPath
 
 import scala.sys.process.*
 
-sealed trait FlowContext {
+abstract class FlowContext {
   def config: InputConfig
   def validate: Either[String, Unit]
 }
@@ -21,7 +21,7 @@ case class InitialContext(config: InputConfig, inputRtl: VerilogPath)
     Either.cond(
       config.designInfo.clkFreqMHz > 0,
       (),
-      "Clock frequency must be positive"
+      "Clock frequency must be positive, currently: " + config.designInfo.clkFreqMHz
     )
 }
 
@@ -47,7 +47,7 @@ case class SynContext(initial: InitialContext, netlist: VerilogPath)
       .cond(
         config.designInfo.coreUtilization > 0 && config.designInfo.coreUtilization < 1.0,
         (),
-        "Core utilization must be between 0.0 and 1.0"
+        "Core utilization must be between 0.0 and 1.0, currently: " + config.designInfo.coreUtilization
       )
       .flatMap(_ => initial.validate)
 }
@@ -63,12 +63,16 @@ object Flow extends GlobalConfigs {
     IO.blocking(Process(Seq("sh", "-c", cmd), None, env*).!)
   }
 
+  def checkCtx[T <: FlowContext](ctx: T): IO[Unit] = {
+    IO.fromEither(ctx.validate.leftMap(new RuntimeException(_)))
+  }
+
   /** Simulates the Synthesis step. Takes InitialContext, validates it, and
     * produces SynContext with a Netlist file.
     */
   def runSynthesis(ctx: InitialContext): IO[SynContext] = {
     for {
-      _ <- IO.fromEither(ctx.validate.leftMap(new RuntimeException(_)))
+      _ <- checkCtx(ctx)
 
       _ <- IO.println(s"[Synthesis] Reading RTL from: ${ctx.inputRtl.value}")
       _ <- IO.println(
@@ -107,7 +111,7 @@ object Flow extends GlobalConfigs {
     */
   def runPlaceAndRoute(ctx: SynContext): IO[PnrContext] = {
     for {
-      _ <- IO.fromEither(ctx.validate.leftMap(new RuntimeException(_)))
+      _ <- checkCtx(ctx)
 
       _ <- IO.println(s"[PnR] Reading Netlist from: ${ctx.netlist.value}")
       _ <- IO.println(
