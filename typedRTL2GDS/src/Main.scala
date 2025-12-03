@@ -150,12 +150,9 @@ object Main extends IOApp {
         s"echo '[Shell] Running Yosys synthesis on ${ctx.inputRtl.value}...'"
       exitCode <- IO.blocking(cmd.!)
 
-      _ <-
-        if (exitCode != 0)
-          IO.raiseError(
-            new RuntimeException(s"Yosys failed with exit code $exitCode")
-          )
-        else IO.unit
+      _ <- IO.raiseWhen(exitCode != 0)(
+        new RuntimeException(s"Yosys failed with exit code $exitCode")
+      )
 
       defPathStr = s"output/${ctx.config.designName}.def"
       defOutput <- IO.fromEither(
