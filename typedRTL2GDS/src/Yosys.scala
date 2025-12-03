@@ -4,7 +4,7 @@ import rtl2gds.types.EDATypes.VerilogPath
 
 object Yosys {
   def runtimeEnv(clkFreqMHz: Int, foundryPath: String) = Seq(
-    "CLK_FREQ" -> clkFreqMHz.toString,
+    "CLK_FREQ_MHZ" -> clkFreqMHz.toString,
     "FOUNDARY_PATH" -> foundryPath
   )
   def synthCommand(
