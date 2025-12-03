@@ -14,5 +14,5 @@ object Yosys {
       rtlFile: VerilogPath,
       outputNetList: String
   ): String =
-    s"echo tcl ${scriptDir}/synth.tcl ${config.designName} ${pdkScriptDir} ${config.rtlFile} ${outputNetList} | yosys -g -l yosys_synth.log -s -"
+    s"echo tcl ${scriptDir}/synth.tcl ${config.designName} ${pdkScriptDir} ${rtlFile.value} ${outputNetList} | yosys -g -l yosys_synth.log -s -"
 }
