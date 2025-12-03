@@ -110,13 +110,13 @@ object Main extends IOApp {
         IO.println(error).as(ExitCode.Error)
 
       case Right(cliArgs) =>
-        program(cliArgs)
+        runFlow(cliArgs)
     }
   }
 
-  /** Main program flow: Load config -> Synthesis -> Place & Route
+  /** Main runFlow flow: Load config -> Synthesis -> Place & Route
     */
-  def program(cliArgs: CliArgs): IO[ExitCode] = {
+  def runFlow(cliArgs: CliArgs): IO[ExitCode] = {
     for {
       _ <- IO.println(s"Loading config from: ${cliArgs.configPath}")
       config <- loadConfig(cliArgs.configPath)
