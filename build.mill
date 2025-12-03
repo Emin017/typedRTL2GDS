@@ -1,0 +1,39 @@
+//// SNIPPET:BUILD
+
+package build
+import mill._
+import scalalib._
+import $ivy.`com.goyeau::mill-scalafix::0.5.1`
+import com.goyeau.mill.scalafix.ScalafixModule
+import mill.scalalib.scalafmt.ScalafmtModule
+
+object typedRTL2GDS extends ScalaModule with ScalafmtModule with ScalafixModule {
+  def scalaVersion = "3.6.4"
+  def typeSafeConfigVersion = "1.4.2"
+
+  def scalacOptions = Seq("-feature", "-deprecation", "-explain", "-Wunused:all")
+
+  def ivyDeps = Agg(
+    ivy"com.lihaoyi::scalatags:0.13.1",
+    ivy"com.lihaoyi::mainargs:0.6.2",
+    ivy"com.typesafe:config:${typeSafeConfigVersion}",
+    ivy"org.slf4j:slf4j-simple:1.7.36",
+    ivy"org.eclipse.jgit:org.eclipse.jgit:7.2.0.202503040940-r",
+    // Cats for functional programming
+    ivy"org.typelevel::cats-core:2.12.0",
+    ivy"org.typelevel::cats-effect:3.5.7",
+    // Circe for YAML parsing
+    ivy"io.circe::circe-core:0.14.10",
+    ivy"io.circe::circe-generic:0.14.10",
+    ivy"io.circe::circe-parser:0.14.10",
+    ivy"io.circe::circe-yaml:0.15.1",
+  )
+
+  object test extends ScalaTests with ScalafmtModule {
+    def scalacOptions = Seq("-feature", "-deprecation", "-explain", "-Wunused:all")
+    def ivyDeps = Agg(
+      ivy"org.scalatest::scalatest:3.2.18",
+    )
+    def testFramework = "org.scalatest.tools.Framework"
+  }
+}
