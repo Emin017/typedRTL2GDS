@@ -5,15 +5,48 @@ import cats.syntax.all.*
 import rtl2gds.InputConfig
 import rtl2gds.Yosys
 import rtl2gds.configs.GlobalConfigs
-import rtl2gds.types.EDATypes.GdsPath
-import rtl2gds.types.EDATypes.VerilogPath
+import rtl2gds.types.EDATypes.{DefPath, GdsPath, VerilogPath}
 
 import scala.sys.process.*
+
+case class InputCTX(
+    defPath: Option[DefPath],
+    verilogFile: Option[VerilogPath]
+    // Add more artifacts as needed
+) {
+  def validate: Either[String, Unit] = Either.cond(
+    defPath.isDefined || verilogFile.isDefined,
+    (),
+    "At least one input artifact (DEF or Verilog) must be provided."
+  )
+}
+
+case class OutputCTX(
+    defPath: Option[DefPath],
+    verilogFile: Option[VerilogPath]
+    // Add more artifacts as needed
+) {
+  def validate: Either[String, Unit] = Either.cond(
+    defPath.isDefined || verilogFile.isDefined,
+    (),
+    "At least one output artifact (DEF or Verilog) must be generated."
+  )
+}
 
 abstract class FlowContext {
   def config: InputConfig
 
   def validate: Either[String, Unit]
+
+  def inputCtx: InputCTX
+
+  def outputCtx: OutputCTX
+}
+
+abstract class BackendFlowContext[T <: InputCTX](
+    val ctx: T
+) extends FlowContext {
+  def backendStep: String
 }
 
 case class InitialContext(config: InputConfig, inputRtl: VerilogPath)
@@ -24,6 +57,11 @@ case class InitialContext(config: InputConfig, inputRtl: VerilogPath)
       (),
       "Clock frequency must be positive, currently: " + config.designInfo.clkFreqMHz
     )
+
+  def inputCtx: InputCTX =
+    InputCTX(defPath = None, verilogFile = Some(inputRtl))
+
+  def outputCtx: OutputCTX = OutputCTX(defPath = None, verilogFile = None)
 }
 
 object InitialContext {
@@ -51,12 +89,80 @@ case class SynContext(initial: InitialContext, netlist: VerilogPath)
         "Core utilization must be between 0.0 and 1.0, currently: " + config.designInfo.coreUtilization
       )
       .flatMap(_ => initial.validate)
+
+  def inputCtx: InputCTX = initial.inputCtx
+
+  def outputCtx: OutputCTX =
+    OutputCTX(defPath = None, verilogFile = Some(netlist))
 }
 
-case class PnrContext(syn: SynContext, gdsFile: GdsPath) extends FlowContext {
-  def config: InputConfig = syn.config
+case class FloorplanContext(c: InputConfig, inputCtx: InputCTX)
+    extends BackendFlowContext(inputCtx) {
+  override def backendStep: String = "Floorplan"
 
-  def validate: Either[String, Unit] = syn.validate
+  def config: InputConfig = c
+
+  def validate: Either[String, Unit] = inputCtx.validate
+
+  def outputCtx: OutputCTX = OutputCTX(defPath = None, verilogFile = None)
+}
+
+case class PlaceContext(c: InputConfig, inputCtx: InputCTX)
+    extends BackendFlowContext(inputCtx) {
+  override def backendStep: String = "Placement"
+
+  def config: InputConfig = c
+
+  def validate: Either[String, Unit] = inputCtx.validate
+
+  def outputCtx: OutputCTX = OutputCTX(
+    defPath = Some(DefPath(s"${config.designName}_${backendStep}.def")),
+    verilogFile = Some(VerilogPath(s"${config.designName}_$backendStep.v"))
+  )
+}
+
+case class CTSContext(c: InputConfig, inputCtx: InputCTX)
+    extends BackendFlowContext(inputCtx) {
+  override def backendStep: String = "ClockTreeSynthesis"
+
+  def config: InputConfig = c
+
+  def validate: Either[String, Unit] = inputCtx.validate
+
+  def outputCtx: OutputCTX = OutputCTX(
+    defPath = Some(DefPath(s"${config.designName}_${backendStep}.def")),
+    verilogFile = Some(VerilogPath(s"${config.designName}_$backendStep.v"))
+  )
+}
+
+trait FlowStep[In <: FlowContext, Out <: FlowContext] {
+  def stepName: String
+
+  def construct(c: InputConfig, i: InputCTX): Out
+}
+
+object FlowStep {
+  given FlowStep[SynContext, FloorplanContext] with {
+    def stepName = "Floorplan"
+
+    def construct(c: InputConfig, i: InputCTX) =
+      FloorplanContext(c, i)
+  }
+
+  given FlowStep[FloorplanContext, PlaceContext] with {
+    def stepName = "Placement"
+
+    def construct(c: InputConfig, i: InputCTX) =
+      PlaceContext(c, i)
+  }
+
+  given FlowStep[PlaceContext, CTSContext] with {
+    def stepName = "ClockTreeSynthesis"
+
+    def construct(c: InputConfig, i: InputCTX) =
+      CTSContext(c, i)
+  }
+
 }
 
 object Flow extends GlobalConfigs {
@@ -113,25 +219,81 @@ object Flow extends GlobalConfigs {
     } yield SynContext(ctx, netlistOutput)
   }
 
-  /** Simulates the Place & Route step. Takes SynContext, validates it, and
-    * produces PnrContext with a GDS file.
-    */
-  def runPlaceAndRoute(ctx: SynContext): IO[PnrContext] = {
+  def runBackendFlow[In <: FlowContext, Out <: FlowContext](
+      config: InputConfig,
+      ctx: In
+  )(using step: FlowStep[In, Out]): IO[Out] = {
     for {
       _ <- checkCtx(ctx)
 
-      _ <- IO.println(s"[PnR] Reading Netlist from: ${ctx.netlist.value}")
+      stepName = step.stepName
       _ <- IO.println(
-        s"[PnR] Core Utilization: ${ctx.config.designInfo.coreUtilization}"
+        s"[$stepName] Processing design: ${ctx.config.designName}"
+      )
+      _ <- IO.println(
+        s"[$stepName] Using Input file: ${ctx.inputCtx.defPath
+            .map(_.value)
+            .getOrElse("N/A")} ${ctx.inputCtx.verilogFile.map(_.value).getOrElse("N/A")}"
       )
 
-      gdsPathStr = s"output/${ctx.config.designName}.gds"
-      gdsOutput <- IO.fromEither(
-        GdsPath.from(gdsPathStr).leftMap(new IllegalArgumentException(_))
+      env = Seq.empty[(String, String)]
+      _ <- runCommand(
+        s"echo Running $stepName step... && echo Generating ${ctx.outputCtx.defPath.map(_.value).getOrElse("N/A")}",
+        env
       )
 
-      _ <- IO.println(s"[PnR] Generated GDS: ${gdsOutput.value}")
-    } yield PnrContext(ctx, gdsOutput)
+      _ <- IO.println(s"[$stepName] Completed successfully.")
+      _ <- IO.println(
+        s"[$stepName] Output Def file: ${ctx.outputCtx.defPath.map(_.value).getOrElse("N/A")}"
+      )
+      outputDefPath <- IO.fromEither(
+        ctx.outputCtx.defPath
+          .toRight(new RuntimeException(s"No DEF file generated in $stepName"))
+      )
+
+      _ <- IO.println(
+        s"[$stepName] Output Verilog file: ${ctx.outputCtx.verilogFile.map(_.value).getOrElse("N/A")}"
+      )
+      outputVerilogPath <- IO.fromEither(
+        ctx.outputCtx.verilogFile
+          .toRight(
+            new RuntimeException(s"No Verilog file generated in $stepName")
+          )
+      )
+
+    } yield step.construct(config, ctx.inputCtx)
+  }
+
+  /** Simulates the Place & Route step. Takes SynContext, validates it, and
+    * produces PnrContext with a GDS file.
+    */
+  def runFloorplan(c: InputConfig, ctx: SynContext): IO[FloorplanContext] = {
+    for {
+      _ <- IO.println(s"[FP] Reading Netlist from: ${ctx.netlist.value}")
+      _ <- IO.println(
+        s"[FP] Core Utilization: ${ctx.config.designInfo.coreUtilization}"
+      )
+
+      nextCtx <- runBackendFlow(c, ctx)
+    } yield nextCtx
+  }
+
+  def runPlacement(c: InputConfig, ctx: FloorplanContext): IO[PlaceContext] = {
+    for {
+      _ <- IO.println(
+        s"[Place] Core Utilization: ${ctx.config.designInfo.coreUtilization}"
+      )
+      nextCtx <- runBackendFlow(c, ctx)
+
+    } yield nextCtx
+  }
+
+  def runCTS(c: InputConfig, ctx: PlaceContext): IO[CTSContext] = {
+    for {
+      _ <- IO.println(s"[CTS] Running Clock Tree Synthesis...")
+      nextCtx <- runBackendFlow(c, ctx)
+
+    } yield nextCtx
   }
 
 }

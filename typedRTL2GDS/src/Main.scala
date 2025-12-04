@@ -59,10 +59,12 @@ object Main extends IOApp {
       _ <- IO.println(s"Initialized Flow for design: ${config.designName}")
 
       synCtx <- Flow.runSynthesis(initialCtx)
-      pnrCtx <- Flow.runPlaceAndRoute(synCtx)
+      fpCtx <- Flow.runFloorplan(config, synCtx)
+      plCtx <- Flow.runPlacement(config, fpCtx)
+      ctsCtx <- Flow.runCTS(config, plCtx)
 
       _ <- IO.println("Flow completed successfully.")
-      _ <- IO.println(s"Final GDS: ${pnrCtx.gdsFile.value}")
+//      _ <- IO.println(s"Final GDS: ${pnrCtx.gdsFile.value}")
 
     } yield ExitCode.Success
   }

@@ -17,6 +17,8 @@ object EDATypes {
       VerilogPath.from(s).leftMap(new IllegalArgumentException(_))
     )
 
+    def apply(s: String): VerilogPath = s
+
     extension (p: VerilogPath) def value: String = p
   }
 
@@ -28,6 +30,12 @@ object EDATypes {
         path,
         s"Invalid DEF file: '$path' (must end with .def)"
       )
+
+    def check(s: String): IO[DefPath] = IO.fromEither(
+      DefPath.from(s).leftMap(new IllegalArgumentException(_))
+    )
+
+    def apply(s: String): DefPath = s
 
     extension (p: DefPath) def value: String = p
   }
