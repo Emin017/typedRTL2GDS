@@ -8,14 +8,16 @@ import io.circe.yaml.parser
 import mainargs.*
 import rtl2gds.flow.Flow
 import rtl2gds.flow.InitialContext
-import rtl2gds.types.EDATypes.GdsPath
 
 import scala.io.Source
 
 case class DesignInfo(
     clkPortName: String,
     clkFreqMHz: Int,
-    coreUtilization: Double
+    coreUtilization: Double,
+    tapCell: String = "TAPCELL_DEFAULT",
+    tapDistance: Int = 10,
+    endcap: String = "ENDCAP_DEFAULT"
 )
 case class Foundry(name: String, pdkDir: String)
 case class InputConfig(

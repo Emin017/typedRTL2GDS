@@ -5,7 +5,8 @@ import cats.syntax.all.*
 import rtl2gds.InputConfig
 import rtl2gds.Yosys
 import rtl2gds.configs.GlobalConfigs
-import rtl2gds.types.EDATypes.{DefPath, GdsPath, VerilogPath}
+import rtl2gds.types.EDATypes.DefPath
+import rtl2gds.types.EDATypes.VerilogPath
 
 import scala.sys.process.*
 
@@ -137,6 +138,10 @@ case class CTSContext(c: InputConfig, inputCtx: InputCTX)
 trait FlowStep[In <: FlowContext, Out <: FlowContext] {
   def stepName: String
 
+  def scriptRelativePath: String
+
+  def stepEnv(c: InputConfig, i: InputCTX): Seq[(String, String)]
+
   def construct(c: InputConfig, i: InputCTX): Out
 }
 
@@ -144,12 +149,30 @@ object FlowStep {
   given FlowStep[SynContext, FloorplanContext] with {
     def stepName = "Floorplan"
 
+    def scriptRelativePath = "script/iFP_script/run_iFP.tcl"
+
+    def stepEnv(c: InputConfig, i: InputCTX): Seq[(String, String)] = Seq(
+      "NETLIST_FILE" -> i.verilogFile.map(_.value).getOrElse(""),
+      "TOP_NAME" -> c.designName,
+      "CLK_PORT_NAME" -> c.designInfo.clkPortName,
+      "USE_FIXED_BBOX" -> "False",
+      "CORE_UTIL" -> c.designInfo.coreUtilization.toString,
+      "TAPCELL" -> c.designInfo.tapCell,
+      "TAP_DISTANCE" -> c.designInfo.tapDistance.toString,
+      "ENDCAP" -> c.designInfo.endcap
+    )
+
     def construct(c: InputConfig, i: InputCTX) =
       FloorplanContext(c, i)
   }
 
   given FlowStep[FloorplanContext, PlaceContext] with {
     def stepName = "Placement"
+    def scriptRelativePath = "script/iPL_script/run_iPL.tcl"
+
+    def stepEnv(c: InputConfig, i: InputCTX): Seq[(String, String)] = Seq(
+      "INPUT_DEF" -> i.defPath.map(_.value).getOrElse("")
+    )
 
     def construct(c: InputConfig, i: InputCTX) =
       PlaceContext(c, i)
@@ -157,6 +180,11 @@ object FlowStep {
 
   given FlowStep[PlaceContext, CTSContext] with {
     def stepName = "ClockTreeSynthesis"
+    def scriptRelativePath = "script/iCTS_script/run_iCTS.tcl"
+
+    def stepEnv(c: InputConfig, i: InputCTX): Seq[(String, String)] = Seq(
+      "INPUT_DEF" -> i.defPath.map(_.value).getOrElse("")
+    )
 
     def construct(c: InputConfig, i: InputCTX) =
       CTSContext(c, i)
@@ -235,9 +263,14 @@ object Flow extends GlobalConfigs {
             .getOrElse("N/A")} ${ctx.inputCtx.verilogFile.map(_.value).getOrElse("N/A")}"
       )
 
-      env = Seq.empty[(String, String)]
+      commonEnv = genCommonEnv(ctx)
+
+      stepEnv = step.stepEnv(config, ctx.inputCtx)
+
+      env = commonEnv ++ stepEnv
+
       _ <- runCommand(
-        s"echo Running $stepName step... && echo Generating ${ctx.outputCtx.defPath.map(_.value).getOrElse("N/A")}",
+        s"iEDA ${iEDAScriptsPath}/${step.scriptRelativePath}",
         env
       )
 
@@ -289,7 +322,7 @@ object Flow extends GlobalConfigs {
 
   def runCTS(c: InputConfig, ctx: PlaceContext): IO[CTSContext] = {
     for {
-      _ <- IO.println(s"[CTS] Running Clock Tree Synthesis...")
+      _ <- IO.println("[CTS] Running Clock Tree Synthesis...")
       nextCtx <- runBackendFlow(c, ctx)
 
     } yield nextCtx
