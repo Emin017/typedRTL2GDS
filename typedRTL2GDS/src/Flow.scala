@@ -47,6 +47,11 @@ abstract class BackendFlowContext[T <: InputCTX](
     val ctx: T
 ) extends FlowContext {
   def backendStep: String
+
+  def backendOutArtifacts: OutputCTX = OutputCTX(
+    defPath = Some(DefPath(s"${config.designName}_${backendStep}.def")),
+    verilogFile = Some(VerilogPath(s"${config.designName}_$backendStep.v"))
+  )
 }
 
 case class InitialContext(config: InputConfig, inputRtl: VerilogPath)
@@ -104,7 +109,7 @@ case class FloorplanContext(c: InputConfig, inputCtx: InputCTX)
 
   def validate: Either[String, Unit] = inputCtx.validate
 
-  def outputCtx: OutputCTX = OutputCTX(defPath = None, verilogFile = None)
+  def outputCtx: OutputCTX = backendOutArtifacts
 }
 
 case class PlaceContext(c: InputConfig, inputCtx: InputCTX)
@@ -115,10 +120,7 @@ case class PlaceContext(c: InputConfig, inputCtx: InputCTX)
 
   def validate: Either[String, Unit] = inputCtx.validate
 
-  def outputCtx: OutputCTX = OutputCTX(
-    defPath = Some(DefPath(s"${config.designName}_${backendStep}.def")),
-    verilogFile = Some(VerilogPath(s"${config.designName}_$backendStep.v"))
-  )
+  def outputCtx: OutputCTX = backendOutArtifacts
 }
 
 case class CTSContext(c: InputConfig, inputCtx: InputCTX)
@@ -129,10 +131,7 @@ case class CTSContext(c: InputConfig, inputCtx: InputCTX)
 
   def validate: Either[String, Unit] = inputCtx.validate
 
-  def outputCtx: OutputCTX = OutputCTX(
-    defPath = Some(DefPath(s"${config.designName}_${backendStep}.def")),
-    verilogFile = Some(VerilogPath(s"${config.designName}_$backendStep.v"))
-  )
+  def outputCtx: OutputCTX = backendOutArtifacts
 }
 
 trait FlowStep[In <: FlowContext, Out <: FlowContext] {
