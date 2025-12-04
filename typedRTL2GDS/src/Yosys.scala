@@ -7,12 +7,14 @@ object Yosys {
     "CLK_FREQ_MHZ" -> clkFreqMHz.toString,
     "FOUNDARY_PATH" -> foundryPath
   )
+
   def synthCommand(
       config: InputConfig,
       scriptDir: String,
       pdkScriptDir: String,
       rtlFile: VerilogPath,
-      outputNetList: String
+      outputNetList: String,
+      outputDir: String
   ): String =
-    s"echo tcl ${scriptDir}/synth.tcl ${config.designName} ${pdkScriptDir} ${rtlFile.value} ${outputNetList} | yosys -g -l yosys_synth.log -s -"
+    s"echo tcl ${scriptDir}/synth.tcl ${config.designName} ${pdkScriptDir} ${rtlFile.value} ${outputNetList} | yosys -g -l ${outputDir}/yosys_synth.log -s -"
 }

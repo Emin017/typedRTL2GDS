@@ -1,6 +1,7 @@
 designName: gcd
 rtlFile: ./gcd.v
 enableFileList: false
+resultDir: ./result_gcd
 
 foundry:
   name: ics55

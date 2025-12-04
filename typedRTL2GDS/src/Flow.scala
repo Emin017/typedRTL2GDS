@@ -12,6 +12,7 @@ import scala.sys.process.*
 
 abstract class FlowContext {
   def config: InputConfig
+
   def validate: Either[String, Unit]
 }
 
@@ -79,16 +80,18 @@ object Flow extends GlobalConfigs {
         s"[Synthesis] Target Frequency: ${ctx.config.designInfo.clkFreqMHz} MHz"
       )
 
-      outputNetList = s"output/${ctx.config.designName}.v"
+      synthResultDir = s"${ctx.config.resultDir}/synthesis"
+      outputNetList = s"$synthResultDir/${ctx.config.designName}.v"
       // Ensure output directory exists
-      _ <- IO.blocking(new java.io.File("output").mkdirs())
+      _ <- IO.blocking(new java.io.File(synthResultDir).mkdirs())
 
       cmd = Yosys.synthCommand(
         config = ctx.config,
         scriptDir = yosysScriptsPath,
         pdkScriptDir = ctx.config.foundry.name,
         rtlFile = ctx.inputRtl,
-        outputNetList = outputNetList
+        outputNetList = outputNetList,
+        outputDir = synthResultDir
       )
 
       env = Yosys.runtimeEnv(
