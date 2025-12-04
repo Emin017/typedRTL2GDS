@@ -24,5 +24,5 @@ object Yosys {
       outputNetList: String,
       outputDir: String
   ): String =
-    s"echo tcl ${scriptDir}/synth.tcl ${config.designName} ${pdkScriptDir} ${rtlFile.value} ${outputNetList} | yosys -g -l ${outputDir}/yosys_synth.log -s -"
+    s"echo tcl $scriptDir/synth.tcl ${config.designName} $pdkScriptDir ${rtlFile.value} $outputNetList | yosys -g -l $outputDir/yosys_synth.log -s -"
 }
