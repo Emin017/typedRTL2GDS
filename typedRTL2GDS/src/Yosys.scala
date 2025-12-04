@@ -3,6 +3,14 @@ package rtl2gds
 import rtl2gds.types.EDATypes.VerilogPath
 
 object Yosys {
+  def artifacts(designName: String, resultDir: String): (String, String) = {
+    val synthResDir = s"$resultDir/synthesis"
+    Tuple2(
+      synthResDir,
+      s"$synthResDir/${designName}_nl.v"
+    )
+  }
+
   def runtimeEnv(clkFreqMHz: Int, foundryPath: String) = Seq(
     "CLK_FREQ_MHZ" -> clkFreqMHz.toString,
     "FOUNDARY_PATH" -> foundryPath

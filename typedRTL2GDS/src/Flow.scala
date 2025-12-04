@@ -80,8 +80,10 @@ object Flow extends GlobalConfigs {
         s"[Synthesis] Target Frequency: ${ctx.config.designInfo.clkFreqMHz} MHz"
       )
 
-      synthResultDir = s"${ctx.config.resultDir}/synthesis"
-      outputNetList = s"$synthResultDir/${ctx.config.designName}.v"
+      (synthResultDir, outputNetList) = Yosys.artifacts(
+        ctx.config.designName,
+        resultDir = ctx.config.resultDir
+      )
       // Ensure output directory exists
       _ <- IO.blocking(new java.io.File(synthResultDir).mkdirs())
 
