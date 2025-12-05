@@ -68,6 +68,8 @@ object Main extends IOApp {
       fpCtx <- Flow.runFloorplan(config, synCtx)
       plCtx <- Flow.runPlacement(config, fpCtx)
       ctsCtx <- Flow.runCTS(config, plCtx)
+      lgCtx <- Flow.runLegalization(config, ctsCtx)
+      rtCtx <- Flow.runRouting(config, lgCtx)
 
       _ <- IO.println("Flow completed successfully.")
 //      _ <- IO.println(s"Final GDS: ${pnrCtx.gdsFile.value}")

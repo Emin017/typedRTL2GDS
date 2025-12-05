@@ -135,6 +135,28 @@ case class CTSContext(c: InputConfig, inputCtx: InputCTX)
   def outputCtx: OutputCTX = backendOutArtifacts
 }
 
+case class LegalizationContext(c: InputConfig, inputCtx: InputCTX)
+    extends BackendFlowContext(inputCtx) {
+  override def backendStep: String = "Legalization"
+
+  def config: InputConfig = c
+
+  def validate: Either[String, Unit] = inputCtx.validate
+
+  def outputCtx: OutputCTX = backendOutArtifacts
+}
+
+case class RouteContext(c: InputConfig, inputCtx: InputCTX)
+    extends BackendFlowContext(inputCtx) {
+  override def backendStep: String = "Routing"
+
+  def config: InputConfig = c
+
+  def validate: Either[String, Unit] = inputCtx.validate
+
+  def outputCtx: OutputCTX = backendOutArtifacts
+}
+
 trait FlowStep[In <: FlowContext, Out <: FlowContext] {
   def stepName: String
 
@@ -190,14 +212,40 @@ object FlowStep {
       CTSContext(c, i)
   }
 
+  given FlowStep[CTSContext, LegalizationContext] with {
+    def stepName = "Legalization"
+
+    def scriptRelativePath = "script/iPL_script/run_iPL_legalization.tcl"
+
+    def stepEnv(c: InputConfig, i: InputCTX): Seq[(String, String)] = Seq(
+      "INPUT_DEF" -> i.defPath.map(_.value).getOrElse("")
+    )
+
+    def construct(c: InputConfig, i: InputCTX) =
+      LegalizationContext(c, i)
+  }
+
+  given FlowStep[LegalizationContext, RouteContext] with {
+    def stepName = "Routing"
+
+    def scriptRelativePath = "script/iRT_script/run_iRT.tcl"
+
+    def stepEnv(c: InputConfig, i: InputCTX): Seq[(String, String)] = Seq(
+      "INPUT_DEF" -> i.defPath.map(_.value).getOrElse("")
+    )
+
+    def construct(c: InputConfig, i: InputCTX) =
+      RouteContext(c, i)
+  }
+
 }
 
 object Flow extends GlobalConfigs {
-  def runCommand(cmd: String, env: Seq[(String, String)]): IO[Int] = {
+  private def runCommand(cmd: String, env: Seq[(String, String)]): IO[Int] = {
     IO.blocking(Process(Seq("sh", "-c", cmd), None, env*).!)
   }
 
-  def checkCtx[T <: FlowContext](ctx: T): IO[Unit] = {
+  private def checkCtx[T <: FlowContext](ctx: T): IO[Unit] = {
     IO.fromEither(ctx.validate.leftMap(new RuntimeException(_)))
   }
 
@@ -259,6 +307,9 @@ object Flow extends GlobalConfigs {
         ctx.outputCtx.verilogFile
       )
 
+      // Construct the output context first to get the expected output paths
+      outCtx = step.construct(config, prevInput)
+
       stepName = step.stepName
       _ <- IO.println(
         s"[$stepName] Processing design: ${ctx.config.designName}"
@@ -269,21 +320,21 @@ object Flow extends GlobalConfigs {
             .getOrElse("N/A")} ${prevInput.verilogFile.map(_.value).getOrElse("N/A")}"
       )
 
-      commonEnv = genCommonEnv(ctx)
+      // Ensure output directory exists
+      _ <- IO.blocking(new java.io.File(config.resultDir).mkdirs())
+
+      commonEnv = genCommonEnv(outCtx)
 
       stepEnv = step.stepEnv(config, prevInput)
 
       env = commonEnv ++ stepEnv
 
       _ <- runCommand(
-        s"iEDA $iEDAScriptsPath/${step.scriptRelativePath}",
+        s"iEDA ${iEDAScriptsPath}/${step.scriptRelativePath}",
         env
       )
 
       _ <- IO.println(s"[$stepName] Completed successfully.")
-
-      // Prepare output context for next step
-      outCtx = step.construct(config, prevInput)
 
       _ <- IO.println(
         s"[$stepName] Output Def file: ${outCtx.outputCtx.defPath.map(_.value).getOrElse("N/A")}"
@@ -333,6 +384,25 @@ object Flow extends GlobalConfigs {
   def runCTS(c: InputConfig, ctx: PlaceContext): IO[CTSContext] = {
     for {
       _ <- IO.println("[CTS] Running Clock Tree Synthesis...")
+      nextCtx <- runBackendFlow(c, ctx)
+
+    } yield nextCtx
+  }
+
+  def runLegalization(
+      c: InputConfig,
+      ctx: CTSContext
+  ): IO[LegalizationContext] = {
+    for {
+      _ <- IO.println("[Legalization] Running Legalization step...")
+
+      nextCtx <- runBackendFlow(c, ctx)
+    } yield nextCtx
+  }
+
+  def runRouting(c: InputConfig, ctx: LegalizationContext): IO[RouteContext] = {
+    for {
+      _ <- IO.println("[Routing] Running Routing step...")
       nextCtx <- runBackendFlow(c, ctx)
 
     } yield nextCtx
