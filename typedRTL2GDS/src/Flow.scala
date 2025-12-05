@@ -50,7 +50,7 @@ abstract class BackendFlowContext[T <: InputCTX](
   def backendStep: String
 
   def backendOutArtifacts: OutputCTX = OutputCTX(
-    defPath = Some(DefPath(s"${config.designName}_${backendStep}.def")),
+    defPath = Some(DefPath(s"${config.designName}_$backendStep.def")),
     verilogFile = Some(VerilogPath(s"${config.designName}_$backendStep.v"))
   )
 }
@@ -253,47 +253,57 @@ object Flow extends GlobalConfigs {
     for {
       _ <- checkCtx(ctx)
 
+      // Use output of previous step as input for this step
+      prevInput = InputCTX(
+        ctx.outputCtx.defPath,
+        ctx.outputCtx.verilogFile
+      )
+
       stepName = step.stepName
       _ <- IO.println(
         s"[$stepName] Processing design: ${ctx.config.designName}"
       )
       _ <- IO.println(
-        s"[$stepName] Using Input file: ${ctx.inputCtx.defPath
+        s"[$stepName] Using Input file: ${prevInput.defPath
             .map(_.value)
-            .getOrElse("N/A")} ${ctx.inputCtx.verilogFile.map(_.value).getOrElse("N/A")}"
+            .getOrElse("N/A")} ${prevInput.verilogFile.map(_.value).getOrElse("N/A")}"
       )
 
       commonEnv = genCommonEnv(ctx)
 
-      stepEnv = step.stepEnv(config, ctx.inputCtx)
+      stepEnv = step.stepEnv(config, prevInput)
 
       env = commonEnv ++ stepEnv
 
       _ <- runCommand(
-        s"iEDA ${iEDAScriptsPath}/${step.scriptRelativePath}",
+        s"iEDA $iEDAScriptsPath/${step.scriptRelativePath}",
         env
       )
 
       _ <- IO.println(s"[$stepName] Completed successfully.")
+
+      // Prepare output context for next step
+      outCtx = step.construct(config, prevInput)
+
       _ <- IO.println(
-        s"[$stepName] Output Def file: ${ctx.outputCtx.defPath.map(_.value).getOrElse("N/A")}"
+        s"[$stepName] Output Def file: ${outCtx.outputCtx.defPath.map(_.value).getOrElse("N/A")}"
       )
       outputDefPath <- IO.fromEither(
-        ctx.outputCtx.defPath
+        outCtx.outputCtx.defPath
           .toRight(new RuntimeException(s"No DEF file generated in $stepName"))
       )
 
       _ <- IO.println(
-        s"[$stepName] Output Verilog file: ${ctx.outputCtx.verilogFile.map(_.value).getOrElse("N/A")}"
+        s"[$stepName] Output Verilog file: ${outCtx.outputCtx.verilogFile.map(_.value).getOrElse("N/A")}"
       )
       outputVerilogPath <- IO.fromEither(
-        ctx.outputCtx.verilogFile
+        outCtx.outputCtx.verilogFile
           .toRight(
             new RuntimeException(s"No Verilog file generated in $stepName")
           )
       )
 
-    } yield step.construct(config, ctx.inputCtx)
+    } yield outCtx
   }
 
   /** Simulates the Place & Route step. Takes SynContext, validates it, and
