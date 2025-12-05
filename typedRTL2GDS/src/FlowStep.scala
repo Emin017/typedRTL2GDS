@@ -71,7 +71,9 @@ object FlowStep {
       "CORE_UTIL" -> c.designInfo.coreUtilization.toString,
       "TAPCELL" -> c.foundry.tapCell,
       "TAP_DISTANCE" -> c.foundry.tapDistance.toString,
-      "ENDCAP" -> c.foundry.endCap
+      "ENDCAP" -> c.foundry.endCap,
+      "DESIGN_STAT_TEXT" -> s"${c.resultDir}/report/floorplan_stat.rpt",
+      "DESIGN_STAT_JSON" -> s"${c.resultDir}/report/floorplan_stat.json"
     )
 
     def construct(c: InputConfig, i: InputCTX) =
@@ -84,7 +86,11 @@ object FlowStep {
     def scriptRelativePath = "script/iPL_script/run_iPL.tcl"
 
     def stepEnv(c: InputConfig, i: InputCTX): Seq[(String, String)] = Seq(
-      "INPUT_DEF" -> i.defPath.map(_.value).getOrElse("")
+      "INPUT_DEF" -> i.defPath.map(_.value).getOrElse(""),
+      "DESIGN_STAT_TEXT" -> s"${c.resultDir}/report/placement_stat.rpt",
+      "DESIGN_STAT_JSON" -> s"${c.resultDir}/report/placement_stat.json",
+      "TOOL_METRICS_JSON" -> s"${c.resultDir}/metric/iPL_metrics.json",
+      "TOOL_REPORT_DIR" -> s"${c.resultDir}/pl"
     )
 
     def construct(c: InputConfig, i: InputCTX) =
@@ -97,7 +103,11 @@ object FlowStep {
     def scriptRelativePath = "script/iCTS_script/run_iCTS.tcl"
 
     def stepEnv(c: InputConfig, i: InputCTX): Seq[(String, String)] = Seq(
-      "INPUT_DEF" -> i.defPath.map(_.value).getOrElse("")
+      "INPUT_DEF" -> i.defPath.map(_.value).getOrElse(""),
+      "TOOL_REPORT_DIR" -> s"${c.resultDir}/cts",
+      "DESIGN_STAT_TEXT" -> s"${c.resultDir}/report/cts_stat.rpt",
+      "DESIGN_STAT_JSON" -> s"${c.resultDir}/report/cts_stat.json",
+      "TOOL_METRICS_JSON" -> s"${c.resultDir}/metric/iCTS_metrics.json"
     )
 
     def construct(c: InputConfig, i: InputCTX) =
@@ -110,7 +120,9 @@ object FlowStep {
     def scriptRelativePath = "script/iPL_script/run_iPL_legalization.tcl"
 
     def stepEnv(c: InputConfig, i: InputCTX): Seq[(String, String)] = Seq(
-      "INPUT_DEF" -> i.defPath.map(_.value).getOrElse("")
+      "INPUT_DEF" -> i.defPath.map(_.value).getOrElse(""),
+      "DESIGN_STAT_TEXT" -> s"${c.resultDir}/report/legalization_stat.rpt",
+      "DESIGN_STAT_JSON" -> s"${c.resultDir}/report/legalization_stat.json"
     )
 
     def construct(c: InputConfig, i: InputCTX) =
@@ -123,7 +135,11 @@ object FlowStep {
     def scriptRelativePath = "script/iRT_script/run_iRT.tcl"
 
     def stepEnv(c: InputConfig, i: InputCTX): Seq[(String, String)] = Seq(
-      "INPUT_DEF" -> i.defPath.map(_.value).getOrElse("")
+      "INPUT_DEF" -> i.defPath.map(_.value).getOrElse(""),
+      "DESIGN_STAT_TEXT" -> s"${c.resultDir}/report/routing_stat.rpt",
+      "DESIGN_STAT_JSON" -> s"${c.resultDir}/report/routing_stat.json",
+      "TOOL_METRICS_JSON" -> s"${c.resultDir}/metric/iRT_routing_metrics.json",
+      "TOOL_REPORT_DIR" -> s"${c.resultDir}/report/rt/"
     )
 
     def construct(c: InputConfig, i: InputCTX) =
