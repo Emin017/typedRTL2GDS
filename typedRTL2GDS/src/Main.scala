@@ -28,6 +28,7 @@ case class InputConfig(
     rtlFile: String,
     enableFileList: Boolean,
     resultDir: String,
+    sdcFile: String,
     designInfo: DesignInfo,
     foundry: Foundry
 )

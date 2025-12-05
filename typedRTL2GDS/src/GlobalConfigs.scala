@@ -30,7 +30,8 @@ trait GlobalConfigs {
       "IEDA_TCL_SCRIPT_DIR" -> s"$iEDAScriptsPath/script",
       "RESULT_DIR" -> i.config.resultDir,
       "OUTPUT_DEF" -> i.outputCtx.defPath.map(_.value).getOrElse(""),
-      "OUTPUT_VERILOG" -> i.outputCtx.verilogFile.map(_.value).getOrElse("")
+      "OUTPUT_VERILOG" -> i.outputCtx.verilogFile.map(_.value).getOrElse(""),
+      "SDC_FILE" -> i.config.sdcFile
     ) ++ foundryEnv
   }
 }
