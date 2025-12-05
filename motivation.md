@@ -2,10 +2,10 @@
 
 A **type-safe RTL-to-GDSII flow orchestrator** written in **Scala 3**, featuring compile-time file format validation and functional effect management using **Cats Effect**.
 
-## Core Strengths vs. Competitors (OpenLane, LibreGDS)
+## Core Strengths vs. Competitors
 
 ### 1. **Compile-Time Type Safety** 🔐
-Unlike Python-based flows (OpenLane, LibreGDS) that catch file format errors at runtime, TypedRTL2GDS uses **opaque types** to enforce file constraints **at compile time**:
+Unlike Python-based flows that catch file format errors at runtime, TypedRTL2GDS uses **opaque types** to enforce file constraints **at compile time**:
 ```scala
 // Impossible to pass wrong file type - caught by compiler
 VerilogPath.from("design.v")    // ✅ Valid
@@ -19,10 +19,6 @@ VerilogPath.from("design.def")  // ❌ Compile error
 - **No imperative pitfalls**: No hidden state mutation, no race conditions
 - **Explicit error handling**: Using `Either[String, T]` and `IO.raiseError` instead of exceptions
 
-**vs. OpenLane/LibreGDS**:
-- Both rely on imperative Python scripts and shell execution
-- State scattered across filesystem and environment variables
-- Harder to reason about dataflow and dependencies
 
 ### 3. **Context-Carrying Validation** ✓
 Each stage validates inputs via nested context objects:
@@ -37,22 +33,23 @@ case class SynContext(initial: InitialContext, netlist: VerilogPath)
 - **No silent failures**: Validation happens explicitly before each stage
 - Full **audit trail** through context nesting
 
-### 4. **Backend-Agnostic Orchestration** 🎯
-- **Tool-agnostic**: Yosys for synthesis, iEDA for place & route (easily swappable)
-- **Configuration-driven**: Single YAML file controls entire flow
-- **Environment isolation**: Each stage gets explicit environment variables via Scala, not shell pollution
 
-**vs. OpenLane/LibreGDS**:
-- These are tightly coupled to specific tool chains (OpenLane → Yosys-specific, LibreGDS → specific tools)
-- Harder to adapt to different PDKs or tool combinations
+### 4. Type-Safe Flow Control 🚦
+The execution order is enforced by the type system via the `FlowStep[In, Out]` trait, ensuring that stages execute in the correct sequence at **compile time**.
 
-### 5. **Production-Grade Tooling** 🛠
-- **Mill build system**: Fast, incremental, reproducible
-- **Nix flakes**: Bit-for-bit reproducible dev environment (no "works on my machine")
-- **Scalafix + scalafmt**: Automated code quality, no linting overhead
-- **ScalaTest**: Type-safe property-based testing
+- **Enforced Execution Order**: The type parameters `In` and `Out` define a strict dependency graph.
+  - You cannot run `Routing` immediately after `Synthesis` because no `FlowStep[SynContext, RouteContext]` instance exists.
+  - The compiler prevents invalid stage skipping or reordering.
+- **Implicit Step Resolution**: Scala 3's `given`/`using` mechanism automatically resolves the correct logic for transitioning between states (e.g., `SynContext` → `FloorplanContext`).
+- **Self-Documenting Pipeline**: The code structure itself documents the flow.
+  ```scala
+  // From FlowStep.scala:
+  given FlowStep[SynContext, FloorplanContext] with { ... }
+  given FlowStep[FloorplanContext, PlaceContext] with { ... }
+  // The compiler guarantees the pipeline follows this exact path
+  ```
 
-### 6. **Zero Runtime Surprise** ⚡
+### 5. Zero Runtime Surprise ⚡
 - **JVM guarantees**: Deterministic object layout, no C segfaults
 - **Memory safety**: Scala's type system prevents null pointer errors
 - **Cross-platform**: Runs identically on Linux/macOS/Windows (Java guarantee)
@@ -63,33 +60,6 @@ case class SynContext(initial: InitialContext, netlist: VerilogPath)
 
 ---
 
-## Typical Usage
-
-```bash
-# Configure design
-cat <<EOF > design.yaml
-designName: gcd
-rtlFile: ./gcd.v
-designInfo:
-  clkPortName: clk
-  clkFreqMHz: 100
-  coreUtilization: 0.7
-foundry:
-  name: ics55
-  pdkDir: /path/to/pdk
-EOF
-
-# Run flow
-java -jar typedRTL2GDS.jar -c design.yaml
-```
-
-**Output stages**:
-1. Synthesis (Yosys) → `result_gcd/synthesis/gcd_nl.v`
-2. Floorplanning (iEDA) → `.def`
-3. Placement (iEDA) → `.def`
-4. Clock Tree Synthesis (iEDA) → `.def` → (future: GDSII)
-
----
 
 ## Why Scala 3?
 
