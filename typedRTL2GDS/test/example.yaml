@@ -3,14 +3,12 @@ rtlFile: ./gcd.v
 enableFileList: false
 resultDir: ./result_gcd
 sdcFile: ./gcd.sdc
-
 foundry:
   name: ics55
   pdkDir: /path/to/foundry
   tapCell: FILLTAPH7R
   endCap: FILLTAPH7R
   tapDistance: 58
-
 designInfo:
   clkPortName: clk
   clkFreqMHz: 100
