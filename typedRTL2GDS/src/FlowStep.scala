@@ -5,12 +5,35 @@ import rtl2gds.types.EDATypes.{DefPath, VerilogPath}
 import rtl2gds.types.ContextTypes.*
 
 trait FlowStep[In <: FlowContext, Out <: FlowContext] {
+
+  /** Name of the flow step.
+    */
   def stepName: String
 
+  /** Relative path to the script used for this flow step.
+    */
   def scriptRelativePath: String
 
+  /** Defines the environment variables required for this flow step.
+    *
+    * @param c
+    *   Input configuration.
+    * @param i
+    *   Input context.
+    * @return
+    *   Sequence of key-value pairs representing environment variables.
+    */
   def stepEnv(c: InputConfig, i: InputCTX): Seq[(String, String)]
 
+  /** Constructs the output FlowContext for this step.
+    *
+    * @param c
+    *   Input configuration.
+    * @param i
+    *   Input context.
+    * @return
+    *   Output FlowContext.
+    */
   def construct(c: InputConfig, i: InputCTX): Out
 }
 
@@ -56,6 +79,7 @@ object FlowStep {
 
   given FlowStep[FloorplanContext, PlaceContext] with {
     def stepName = "Placement"
+
     def scriptRelativePath = "script/iPL_script/run_iPL.tcl"
 
     def stepEnv(c: InputConfig, i: InputCTX): Seq[(String, String)] = Seq(
@@ -68,6 +92,7 @@ object FlowStep {
 
   given FlowStep[PlaceContext, CTSContext] with {
     def stepName = "ClockTreeSynthesis"
+
     def scriptRelativePath = "script/iCTS_script/run_iCTS.tcl"
 
     def stepEnv(c: InputConfig, i: InputCTX): Seq[(String, String)] = Seq(

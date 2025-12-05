@@ -80,8 +80,8 @@ object ContextTypes {
     *     def outputCtx: OutputCTX = ??? // implement output context logic
     *   }}}
     *
-    * Then you can create a FlowStep instance for [[FloorplanContext]] as shown in
-    * the [[rtl2gds.flow.FlowStep]] object.
+    * Then you can create a FlowStep instance for [[FloorplanContext]] as shown
+    * in the [[rtl2gds.flow.FlowStep]] object.
     */
   abstract class BackendFlowContext[T <: InputCTX](
       val ctx: T
