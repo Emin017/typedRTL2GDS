@@ -6,11 +6,12 @@ import rtl2gds.utils.ResourceExtractor
 trait GlobalConfigs {
   // TODO: make this configurable via CLI or config file
   // This implement is not pure, but it's acceptable for global config
-  lazy val scriptsPath: String = ResourceExtractor.ensureScripts().toString
+  private lazy val scriptsPath: String =
+    ResourceExtractor.ensureScripts().toString
 
-  def yosysScriptsPath: String = s"${scriptsPath}/yosys"
+  def yosysScriptsPath: String = s"$scriptsPath/yosys"
 
-  def iEDAScriptsPath: String = s"${scriptsPath}/ieda"
+  def iEDAScriptsPath: String = s"$scriptsPath/ieda"
 
   def genCommonEnv[T <: FlowContext](i: T) = {
     val foundryEnv = if (i.config.foundry.name == "ics55") {
