@@ -1,14 +1,14 @@
-{ pkgs, config, ... }:
+{ pkgs, ... }:
+with pkgs;
 {
-  devShells.default = pkgs.mkShell {
+  devShells.default = mkShell {
     buildInputs =
-      with pkgs;
       [
         mill
         yosys
       ]
-      ++ pkgs.lib.optionals (!pkgs.stdenv.hostPlatform.isDarwin) [
-        iEDA
+      ++ lib.optionals (!stdenv.hostPlatform.isDarwin) [
+        ieda
       ];
   };
 }
