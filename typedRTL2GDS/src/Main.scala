@@ -7,9 +7,10 @@ import io.circe.generic.auto.*
 import io.circe.yaml.parser
 import mainargs.*
 import rtl2gds.flow.Flow
-import types.ContextTypes.InitialContext
 
 import scala.io.Source
+
+import types.ContextTypes.InitialContext
 
 case class DesignInfo(
     clkPortName: String,

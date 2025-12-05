@@ -5,9 +5,9 @@ import cats.syntax.all.*
 import rtl2gds.InputConfig
 import rtl2gds.Yosys
 import rtl2gds.configs.GlobalConfigs
+import rtl2gds.types.ContextTypes.*
 import rtl2gds.types.EDATypes.DefPath
 import rtl2gds.types.EDATypes.VerilogPath
-import rtl2gds.types.ContextTypes.*
 
 import scala.sys.process.*
 

@@ -3,7 +3,8 @@ package rtl2gds.types
 import cats.effect.*
 import cats.syntax.all.*
 import rtl2gds.InputConfig
-import rtl2gds.types.EDATypes.{DefPath, VerilogPath}
+import rtl2gds.types.EDATypes.DefPath
+import rtl2gds.types.EDATypes.VerilogPath
 
 object ContextTypes {
 

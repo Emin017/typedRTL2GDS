@@ -1,8 +1,9 @@
 package rtl2gds.flow
 
 import rtl2gds.InputConfig
-import rtl2gds.types.EDATypes.{DefPath, VerilogPath}
 import rtl2gds.types.ContextTypes.*
+import rtl2gds.types.EDATypes.DefPath
+import rtl2gds.types.EDATypes.VerilogPath
 
 trait FlowStep[In <: FlowContext, Out <: FlowContext] {
 
