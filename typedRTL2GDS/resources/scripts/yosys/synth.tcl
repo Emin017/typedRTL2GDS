@@ -22,7 +22,8 @@ set NETLIST_SYN_V           [lindex $argv 3]
 set VERILOG_INCLUDE_DIRS    ""
 set RESULT_DIR              [file dirname $NETLIST_SYN_V]
 
-source scripts/yosys/pdk/$PDK.tcl
+set SCRIPT_DIR [file dirname [file normalize [info script]]]
+source $SCRIPT_DIR/pdk/$PDK.tcl
 
 set CLK_FREQ_MHZ            500
 if {[info exists env(CLK_FREQ_MHZ)]} {
