@@ -6,9 +6,11 @@ resultDir: ./result_gcd
 foundry:
   name: ics55
   pdkDir: /path/to/foundry
+  tapCell: FILLTAPH7R
+  endCap: FILLTAPH7R
+  tapDistance: 58
 
 designInfo:
   clkPortName: clk
   clkFreqMHz: 100
   coreUtilization: 0.7
-

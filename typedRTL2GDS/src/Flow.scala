@@ -157,9 +157,9 @@ object FlowStep {
       "CLK_PORT_NAME" -> c.designInfo.clkPortName,
       "USE_FIXED_BBOX" -> "False",
       "CORE_UTIL" -> c.designInfo.coreUtilization.toString,
-      "TAPCELL" -> c.designInfo.tapCell,
-      "TAP_DISTANCE" -> c.designInfo.tapDistance.toString,
-      "ENDCAP" -> c.designInfo.endcap
+      "TAPCELL" -> c.foundry.tapCell,
+      "TAP_DISTANCE" -> c.foundry.tapDistance.toString,
+      "ENDCAP" -> c.foundry.endCap
     )
 
     def construct(c: InputConfig, i: InputCTX) =

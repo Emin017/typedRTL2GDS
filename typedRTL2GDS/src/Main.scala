@@ -14,12 +14,15 @@ import scala.io.Source
 case class DesignInfo(
     clkPortName: String,
     clkFreqMHz: Int,
-    coreUtilization: Double,
+    coreUtilization: Double
+)
+case class Foundry(
+    name: String,
+    pdkDir: String,
     tapCell: String = "TAPCELL_DEFAULT",
     tapDistance: Int = 10,
-    endcap: String = "ENDCAP_DEFAULT"
+    endCap: String = "ENDCAP_DEFAULT"
 )
-case class Foundry(name: String, pdkDir: String)
 case class InputConfig(
     designName: String,
     rtlFile: String,
