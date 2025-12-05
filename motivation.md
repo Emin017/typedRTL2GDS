@@ -61,6 +61,9 @@ The execution order is enforced by the type system via the `FlowStep[In, Out]` t
 - Each stage is independently testable and verifiable
 - Each stage's verification logic is encapsulated within its context type (Type-Safe Validation)
 
+See [**FlowStep.scala**](typedRTL2GDS/src/FlowStep.scala) and [**ContextTypes.scala**](typedRTL2GDS/src/types/ContextTypes.scala)
+for more details.
+
 ### 6. Zero Runtime Surprise
 - **JVM guarantees**: Deterministic object layout, no C segfaults
 - **Memory safety**: Scala's type system prevents null pointer errors
