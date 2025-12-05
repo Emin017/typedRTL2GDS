@@ -15,6 +15,8 @@ trait GlobalConfigs {
 
   def genCommonEnv[T <: FlowContext](i: T) = {
     val foundryEnv = if (i.config.foundry.name == "ics55") {
+      // ICS55 PDK specific environment variables
+      // TODO: make this more generic to support other foundries/PDKs
       val pdkDir = i.config.foundry.pdkDir
       Seq(
         "TECH_LEF" -> s"$pdkDir/prtech/techLEF/N551P6M_ieda.lef",
