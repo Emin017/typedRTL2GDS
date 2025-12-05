@@ -1,6 +1,6 @@
 package rtl2gds.configs
 
-import rtl2gds.flow.FlowContext
+import rtl2gds.types.ContextTypes.FlowContext
 import rtl2gds.utils.ResourceExtractor
 
 trait GlobalConfigs {

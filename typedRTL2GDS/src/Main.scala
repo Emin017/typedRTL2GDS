@@ -7,7 +7,7 @@ import io.circe.generic.auto.*
 import io.circe.yaml.parser
 import mainargs.*
 import rtl2gds.flow.Flow
-import rtl2gds.flow.InitialContext
+import types.ContextTypes.InitialContext
 
 import scala.io.Source
 
@@ -53,7 +53,11 @@ object Main extends IOApp {
     }
   }
 
-  /** Main runFlow flow: Load config -> Synthesis -> Place & Route
+  /** Runs the complete EDA flow based on the provided CLI arguments.
+    * @param cliArgs
+    *   Parsed command-line arguments containing the config file path.
+    * @return
+    *   An IO action resulting in an ExitCode indicating success or failure.
     */
   def runFlow(cliArgs: CliArgs): IO[ExitCode] = {
     for {
@@ -72,12 +76,18 @@ object Main extends IOApp {
       rtCtx <- Flow.runRouting(config, lgCtx)
 
       _ <- IO.println("Flow completed successfully.")
-//      _ <- IO.println(s"Final GDS: ${pnrCtx.gdsFile.value}")
+      _ <- IO.println(s"Final step output def: ${rtCtx.outputCtx.defPath
+          .map(_.value)
+          .getOrElse("N/A")}")
 
     } yield ExitCode.Success
   }
 
   /** Loads and parses the YAML configuration file.
+    * @param path
+    *   Path to the YAML config file.
+    * @return
+    *   An IO action resulting in the parsed InputConfig.
     */
   def loadConfig(path: String): IO[InputConfig] = {
     val acquire = IO(Source.fromFile(path))
