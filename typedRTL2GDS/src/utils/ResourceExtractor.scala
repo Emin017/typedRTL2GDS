@@ -1,16 +1,17 @@
 package rtl2gds.utils
 
-import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.net.JarURLConnection
-import scala.jdk.CollectionConverters._
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import java.util.Comparator
+import scala.jdk.CollectionConverters.*
 
 object ResourceExtractor {
   def ensureScripts(): Path = {
     val resourcePath = "/scripts"
-    val url = getClass.getResource(resourcePath)
-
-    if (url == null) {
+    val url = Option(getClass.getResource(resourcePath)).getOrElse {
       throw new RuntimeException(
         s"Could not find resource: $resourcePath. Make sure 'scripts' folder is in src/main/resources or equivalent."
       )
@@ -27,7 +28,13 @@ object ResourceExtractor {
           deleteRecursively(tempDir)
         }))
 
-        val connection = url.openConnection().asInstanceOf[JarURLConnection]
+        val connection = url.openConnection() match {
+          case c: JarURLConnection => c
+          case other =>
+            throw new RuntimeException(
+              s"Expected JarURLConnection, but got ${other.getClass.getName}"
+            )
+        }
         val jarFile = connection.getJarFile
 
         val entries = jarFile.entries().asScala
