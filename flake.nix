@@ -4,6 +4,7 @@
     parts.url = "github:hercules-ci/flake-parts";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
+    mill-ivy-fetcher.url = "github:Avimitin/mill-ivy-fetcher";
   };
 
   outputs =
@@ -12,6 +13,7 @@
       nixpkgs,
       parts,
       treefmt-nix,
+      mill-ivy-fetcher,
       ...
     }:
     parts.lib.mkFlake { inherit inputs; } {
@@ -38,11 +40,20 @@
               yamlfmt.enable = true; # yaml
             };
           };
+          localOverlay = import ./nix/overlay.nix;
         in
         {
+          _module.args.pkgs = import inputs.nixpkgs {
+            inherit system;
+            overlays = [
+              mill-ivy-fetcher.overlays.mill-ivy-fetcher-overlay
+              localOverlay
+            ];
+          };
           imports = [
             ./nix
           ];
+          packages.default = pkgs.callPackage ./nix/pkgs { };
           formatter = treefmtEval.config.build.wrapper;
           checks = {
             formatting = treefmtEval.config.build.check self;
