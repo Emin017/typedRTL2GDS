@@ -94,7 +94,7 @@ object Flow extends GlobalConfigs {
       // Ensure output directory exists
       _ <- IO.blocking(new java.io.File(config.resultDir).mkdirs())
 
-      commonEnv = genCommonEnv(outCtx)
+      commonEnv = genCommonEnv(config, outCtx)
 
       stepEnv = step.stepEnv(config, prevInput)
 
