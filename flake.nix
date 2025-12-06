@@ -46,7 +46,7 @@
           _module.args.pkgs = import inputs.nixpkgs {
             inherit system;
             overlays = [
-              mill-ivy-fetcher.overlays.mill-ivy-fetcher-overlay
+              mill-ivy-fetcher.overlays.default
               localOverlay
             ];
           };
