@@ -19,7 +19,10 @@ case class DesignInfo(
 )
 case class Foundry(
     name: String,
-    pdkDir: String,
+    pdkDir: String, // TODO: Remove pdkDir and use only LEF/Lib paths
+    techLef: String,
+    stdCellLef: String,
+    stdCellLib: String,
     tapCell: String = "TAPCELL_DEFAULT",
     tapDistance: Int = 10,
     endCap: String = "ENDCAP_DEFAULT"

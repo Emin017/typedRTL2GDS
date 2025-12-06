@@ -6,6 +6,9 @@ sdcFile: ./gcd.sdc
 foundry:
   name: ics55
   pdkDir: /path/to/foundry
+  techLef: /path/to/foundry/x.lef
+  stdCellLef: /path/to/foundry/x.lef
+  stdCellLib: /path/to/foundry/x.lib
   tapCell: FILLTAPH7R
   endCap: FILLTAPH7R
   tapDistance: 58

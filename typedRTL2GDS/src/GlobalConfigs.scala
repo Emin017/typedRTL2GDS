@@ -1,5 +1,6 @@
 package rtl2gds.configs
 
+import rtl2gds.InputConfig
 import rtl2gds.types.ContextTypes.FlowContext
 import rtl2gds.utils.ResourceExtractor
 
@@ -13,19 +14,12 @@ trait GlobalConfigs {
 
   def iEDAScriptsPath: String = s"$scriptsPath/ieda"
 
-  def genCommonEnv[T <: FlowContext](i: T) = {
-    val foundryEnv = if (i.config.foundry.name == "ics55") {
-      // ICS55 PDK specific environment variables
-      // TODO: make this more generic to support other foundries/PDKs
-      val pdkDir = i.config.foundry.pdkDir
-      Seq(
-        "TECH_LEF" -> s"$pdkDir/prtech/techLEF/N551P6M_ieda.lef",
-        "LEF_STDCELL" -> s"$pdkDir/IP/STD_cell/ics55_LLSC_H7C_V1p10C100/ics55_LLSC_H7CL/lef/ics55_LLSC_H7CL_ieda.lef",
-        "LIB_STDCELL" -> s"$pdkDir/IP/STD_cell/ics55_LLSC_H7C_V1p10C100/ics55_LLSC_H7CL/liberty/ics55_LLSC_H7CL_typ_tt_1p2_25_nldm.lib"
-      )
-    } else {
-      Seq.empty
-    }
+  def genCommonEnv[T <: FlowContext](c: InputConfig, i: T) = {
+    val foundryEnv = Seq(
+      "TECH_LEF" -> c.foundry.techLef,
+      "LEF_STDCELL" -> c.foundry.stdCellLef,
+      "LIB_STDCELL" -> c.foundry.stdCellLib
+    )
 
     Seq(
       "IEDA_CONFIG_DIR" -> s"$iEDAScriptsPath/iEDA_config",
