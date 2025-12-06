@@ -17,6 +17,10 @@ stdenv.mkDerivation {
     add-determinism
   ];
 
+	# Use mill-ivy-fetcher to generate lock.nix
+	# mill-ivy-fetcher fails to work with mill versions >= 1.x.x
+	# Wait for the fix to be merged:
+	# https://github.com/Avimitin/mill-ivy-fetcher/pull/20
   buildInputs = [ (ivy-gather ./lock.nix) ];
 
   src =
