@@ -16,3 +16,34 @@ val myChipFlow = Design("GCD_Chip")
 // Run the flow
 myChipFlow.run(outputDir = "output/gcd_chip")
 ```
+
+## Future Enhancements
+
+- [ ] More parameterized flow configurations
+- [ ] Parallel stage execution where possible, e.g.,
+```scala3
+val explorationFlow = Design("GCD_DSE")
+  .input(...)
+  .synthesize(...)
+  .explore("utilization_sweep") { baseState =>
+    // Define a sweep over different utilization targets
+    val utils = List(0.6, 0.7, 0.8)
+
+    // Map over the utilization targets to create parallel branches
+    utils.map { u =>
+      baseState
+        .floorplan(utilization = u)
+        .place()
+        .route()
+        .reportMetrics("wns", "tns", "area")
+    }
+  }
+```
+- [ ] Support quality gates, such as:
+```scala3
+.place().check {
+    metrics =>
+      metrics.maxUtilization < 0.8 && metrics.totalWireLength < 1_000_000
+}
+```
+- [ ] Tool Agnostic Backends: `flow.run(synthesizer = YosysTool, placer = DreamPlace, router = TritonRoute)`
