@@ -21,7 +21,7 @@ myChipFlow.run(outputDir = "output/gcd_chip")
 
 - [ ] More parameterized flow configurations
 - [ ] Parallel stage execution where possible, e.g.,
-```scala3
+```scala
 val explorationFlow = Design("GCD_DSE")
   .input(...)
   .synthesize(...)
@@ -40,7 +40,7 @@ val explorationFlow = Design("GCD_DSE")
   }
 ```
 - [ ] Support quality gates, such as:
-```scala3
+```scala
 .place().check {
     metrics =>
       metrics.maxUtilization < 0.8 && metrics.totalWireLength < 1_000_000
