@@ -27,6 +27,16 @@ case class Foundry(
     tapDistance: Int = 10,
     endCap: String = "ENDCAP_DEFAULT"
 )
+case class SynthSettings(
+    flatten: Boolean = true,
+    clockGating: Boolean = false,
+    maxFanout: Int = 20
+) {
+  def flatten(v: Boolean): SynthSettings = copy(flatten = v)
+  def clockGating(v: Boolean): SynthSettings = copy(clockGating = v)
+  def maxFanout(v: Int): SynthSettings = copy(maxFanout = v)
+}
+
 case class InputConfig(
     designName: String,
     rtlFile: String,

@@ -48,10 +48,7 @@ object Flow extends GlobalConfigs {
         outputDir = synthResultDir
       )
 
-      env = Yosys.runtimeEnv(
-        clkFreqMHz = ctx.config.designInfo.clkFreqMHz,
-        foundryPath = ctx.config.foundry.pdkDir
-      )
+      env = Yosys.runtimeEnv(ctx.config, ctx.synthSettings)
 
       exitCode <- runCommand(cmd, env)
 

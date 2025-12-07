@@ -3,6 +3,7 @@ package rtl2gds.types
 import cats.effect.*
 import cats.syntax.all.*
 import rtl2gds.InputConfig
+import rtl2gds.SynthSettings
 import rtl2gds.types.EDATypes.DefPath
 import rtl2gds.types.EDATypes.VerilogPath
 
@@ -95,8 +96,11 @@ object ContextTypes {
     )
   }
 
-  case class InitialContext(config: InputConfig, inputRtl: VerilogPath)
-      extends FlowContext {
+  case class InitialContext(
+      config: InputConfig,
+      inputRtl: VerilogPath,
+      synthSettings: SynthSettings = SynthSettings()
+  ) extends FlowContext {
     def validate: Either[String, Unit] =
       Either.cond(
         config.designInfo.clkFreqMHz > 0,

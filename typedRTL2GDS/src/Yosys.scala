@@ -11,9 +11,12 @@ object Yosys {
     )
   }
 
-  def runtimeEnv(clkFreqMHz: Int, foundryPath: String) = Seq(
-    "CLK_FREQ_MHZ" -> clkFreqMHz.toString,
-    "FOUNDARY_PATH" -> foundryPath
+  def runtimeEnv(config: InputConfig, settings: SynthSettings) = Seq(
+    "CLK_FREQ_MHZ" -> config.designInfo.clkFreqMHz.toString,
+    "FOUNDARY_PATH" -> config.foundry.pdkDir,
+    "SYNTH_FLATTEN" -> (if (settings.flatten) "1" else "0"),
+    "SYNTH_CLOCK_GATING" -> (if (settings.clockGating) "1" else "0"),
+    "SYNTH_MAX_FANOUT" -> settings.maxFanout.toString
   )
 
   def synthCommand(

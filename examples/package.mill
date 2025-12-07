@@ -1,0 +1,24 @@
+package build.examples
+
+import mill._
+import mill.scalalib._
+import mill.scalalib.scalafmt._
+import build.typedRTL2GDS
+
+object `package` extends ScalaModule with ScalafmtModule {
+  def scalaVersion = "3.6.4"
+  // Add dependency on the typedRTL2GDS module
+  def moduleDeps = Seq(typedRTL2GDS)
+
+  def scalacOptions = Seq("-feature", "-deprecation", "-explain", "-Wunused:all", "-Wnonunit-statement")
+
+  def mvnDeps = Seq()
+
+  object test extends ScalaTests with ScalafmtModule {
+    def scalacOptions = Seq("-feature", "-deprecation", "-explain", "-Wunused:all")
+    def mvnDeps = Seq(
+      mvn"org.scalatest::scalatest:3.2.18",
+    )
+    def testFramework = "org.scalatest.tools.Framework"
+  }
+}
