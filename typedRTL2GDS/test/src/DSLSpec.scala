@@ -3,6 +3,8 @@ package rtl2gds
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import cats.effect.unsafe.implicits.global
+import dsl.Design
+
 import java.nio.file.Files
 import java.io.File
 import rtl2gds.types.EDATypes.VerilogPath
@@ -88,7 +90,7 @@ class DSLSpec extends AnyFlatSpec with Matchers {
   }
 
   it should "support method chaining syntax" in withTempConfig { configPath =>
-    import rtl2gds.DSL.*
+    import dsl.DSL.*
 
     val flow = Design("test_chain")
       .input(config = configPath)
@@ -104,7 +106,7 @@ class DSLSpec extends AnyFlatSpec with Matchers {
 
   it should "support declarative configuration block" in withTempConfig {
     configPath =>
-      import rtl2gds.DSL.*
+      import dsl.DSL.*
 
       val flow = Design("test_block")
         .input(config = configPath)
@@ -131,7 +133,7 @@ class DSLSpec extends AnyFlatSpec with Matchers {
 
   it should "support starting from Netlist and chaining floorplan" in withTempConfig {
     configPath =>
-      import rtl2gds.DSL.*
+      import dsl.DSL.*
 
       val netlistPath = "/abs/path/to/netlist.v"
       val flow = Design("test_netlist_chain")
@@ -156,7 +158,7 @@ class DSLSpec extends AnyFlatSpec with Matchers {
 
   it should "support starting from DEF and chaining placement" in withTempConfig {
     configPath =>
-      import rtl2gds.DSL.*
+      import dsl.DSL.*
 
       val defPath = "/abs/path/to/design.def"
       val netlistPath = "/abs/path/to/netlist.v"

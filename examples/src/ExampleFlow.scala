@@ -1,7 +1,8 @@
 package rtl2gds
 
 import cats.effect.*
-import rtl2gds.DSL.*
+import rtl2gds.dsl.*
+import rtl2gds.dsl.DSL.*
 
 object ExampleFlow extends IOApp {
 

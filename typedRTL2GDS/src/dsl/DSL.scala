@@ -1,12 +1,12 @@
-package rtl2gds
+package rtl2gds.dsl
 
 import cats.effect.IO
 import cats.syntax.all.*
 import rtl2gds.Main.loadConfig
+import rtl2gds.SynthSettings
 import rtl2gds.flow.Flow
 import rtl2gds.types.ContextTypes.*
-import rtl2gds.types.EDATypes.DefPath
-import rtl2gds.types.EDATypes.VerilogPath
+import rtl2gds.types.EDATypes.{DefPath, VerilogPath}
 
 import java.nio.file.Paths
 import scala.annotation.targetName
