@@ -6,7 +6,8 @@ import rtl2gds.Main.loadConfig
 import rtl2gds.SynthSettings
 import rtl2gds.flow.Flow
 import rtl2gds.types.ContextTypes.*
-import rtl2gds.types.EDATypes.{DefPath, VerilogPath}
+import rtl2gds.types.EDATypes.DefPath
+import rtl2gds.types.EDATypes.VerilogPath
 
 import java.nio.file.Paths
 import scala.annotation.targetName

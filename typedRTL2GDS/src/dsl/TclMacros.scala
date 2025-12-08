@@ -30,6 +30,12 @@ object TclMacros:
     '{ TclNode.AddCommand($cmd, $args, $fileNameExpr + ":" + $lineNumExpr) }
   }
 
+  def ifImpl(condition: Expr[TclCondition])(using Quotes): Expr[IfBuilder] = {
+    val (fileNameExpr, lineNumExpr) = _sourceLocator
+
+    '{ new IfBuilder($condition, $fileNameExpr + ":" + $lineNumExpr) }
+  }
+
   private def getFileAndLine(using Quotes): Expr[(String, Int)] =
     import quotes.reflect.*
 
